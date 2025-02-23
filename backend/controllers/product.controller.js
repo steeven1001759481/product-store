@@ -1,4 +1,8 @@
 import Product from '../models/product.model.js';
+import emitEvent from '../utils/worker.js';
+// import getIo from '../app.js';
+// import initializeSocket from '../app.js';
+
 
 export const getProducts = async (req, res) => {
     try{
@@ -20,6 +24,9 @@ export const createProduct = async (req, res) => {
     const newProduct = new Product(productData);
     try{
         await newProduct.save();
+        // const io = initializeSocket();  // Access the Socket.IO instance
+        emitEvent('productCreated', `${newProduct.name} created`);
+        // io.emit('productCreated', `${newProduct.name} created`);  // Emit the event
         res.status(201).json({success:true, data:newProduct});
     }
     catch(error){
@@ -33,11 +40,12 @@ export const updateProduct = async (req, res) => {
     const {id} = req.params;
     const productData = req.body;
 
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(400).json({success: false, message: 'invalid product id'});
-    }
+    // if(!mongoose.Types.ObjectId.isValid(id)){
+    //     return res.status(400).json({success: false, message: 'invalid product id'});
+    // }
     try{
         const product = await Product.findByIdAndUpdate(id, productData, {new: true});
+        emitEvent('productUpdated', `${productData.name} updated to ${product.name}`);
         res.status(200).json({success: true, data: product});
     }
     catch(error){
